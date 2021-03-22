@@ -1,6 +1,7 @@
 Lung Cancer Mortality Rate & Environmental Quality Index
 ==============
 
+****
 #######This is a course project. It is to figure out the relationship between lung cancer mortality and many environmental indicators.
 
 #######The team also worked with Porfessor to transfer this project into a research paper.

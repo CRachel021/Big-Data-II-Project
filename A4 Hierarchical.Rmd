@@ -1,0 +1,120 @@
+---
+title: "A4 Hierarchical"
+author: "R"
+date: "3/24/2020"
+output: html_document
+---
+```{r}
+library(factoextra)
+library(cluster)
+library(dplyr)
+library(ggplot2)
+
+```
+
+```{r}
+lung_cancer<- read.csv("E:/Big Data II/A4 Clustering/Air Quality-Lung Cancer Data.csv")
+# Considering the high collinearity between some variables, we drop some variables to avoid that some variables get a higher weight than others
+lung_cancer_data<- lung_cancer[,c(1,5,7,8,9,15,16,17,18,19,20,21,23)]
+
+# Normalized distance:
+lung_cancer_sc<- scale(lung_cancer_data[,2:13])
+
+# Change the FIPS_code to row names 
+row.names(lung_cancer_sc) <- lung_cancer_data[ ,1]
+
+head(lung_cancer_sc)
+
+# Try different methods for computing distance
+lungcancer_dist1<- dist(lung_cancer_sc, method = "euclidean")
+lungcancer_dist2<- dist(lung_cancer_sc, method = "maximum")
+lungcancer_dist3<- dist(lung_cancer_sc, method = "manhattan")
+lungcancer_dist4<- dist(lung_cancer_sc, method = "canberra")
+lungcancer_dist5<- dist(lung_cancer_sc, method = "binary")
+lungcancer_dist6<- dist(lung_cancer_sc, method = "minkowski")
+
+lungcancer_hc1<- hclust(lungcancer_dist1, method = "single")
+lungcancer_hc2<- hclust(lungcancer_dist1, method = "complete")
+lungcancer_hc3<- hclust(lungcancer_dist1, method = "average")
+lungcancer_hc4<- hclust(lungcancer_dist1, method = "median")
+lungcancer_hc5<- hclust(lungcancer_dist1, method = "centroid")
+lungcancer_hc6<- hclust(lungcancer_dist1, method = "ward.D")
+
+plot(lungcancer_hc1, hang = -1, ann = FALSE) 
+plot(lungcancer_hc2, hang = -1, ann = FALSE) 
+plot(lungcancer_hc3, hang = -1, ann = FALSE) 
+plot(lungcancer_hc4, hang = -1, ann = FALSE) 
+plot(lungcancer_hc5, hang = -1, ann = FALSE) 
+plot(lungcancer_hc6, hang = -1, ann = FALSE) 
+# The plot using "ward.D" method looks the best.
+
+```
+
+# Determining Optimal Clusters
+```{r cars}
+# Perform Average Silhouette Method
+fviz_nbclust(lung_cancer_sc, FUN = hcut, method = "silhouette")
+
+# Perform Gap Statistic Method
+mydist <- function(x) dist(x, method = "euclidean")
+mycluster <- function(x, k) list(cluster=cutree(hclust(mydist(x), method = "ward.D"),k=k))
+myclusGap <- clusGap(lung_cancer_sc,FUN = mycluster, K.max = 13, B = 50)
+fviz_gap_stat(myclusGap)
+
+# Considering the number of clusters and the distribution, we choose k equal to 3.
+
+```
+
+```{r}
+lungcancer_cut <- cutree(lungcancer_hc6, k = 3) #ward.D
+```
+
+
+```{r}
+# Elbow method
+fviz_nbclust(lung_cancer_sc, FUN = hcut, method = "wss")
+
+```
+
+```{r}
+# Gap Statistic Method
+gap_stat<- clusGap(lung_cancer_sc,FUN= hcut, K.max = 20, B = 50)
+fviz_gap_stat(gap_stat)
+```
+#Visualization
+```{r}
+#dendrogram
+hcd <- as.dendrogram(lungcancer_hc6)
+nodePar <- list(lab.cex = 0.001, pch = c(NA, 19), 
+                cex = 0.001, col = "blue")
+plot(hcd, ylab = "Height", nodePar = nodePar, leaflab = "none")
+rect.hclust(lungcancer_hc6, k=3, border = 2:4)
+
+# Zoom in to the first dendrogram
+plot(hcd, xlim = c(1,14), ylim = c(1,5))
+```
+
+```{r pressure, echo=FALSE}
+# heatmap
+heatmap(as.matrix(lung_cancer_sc), Colv = NA, hclustfun = hclust, main = "heatmap")
+# Visualize the result in a scatter plot
+fviz_cluster(list(data = lung_cancer_sc, cluster = lungcancer_cut))
+```
+
+```{r}
+# Analyze the trend between lung cancer Mortality and PM2.5 from the data cluster-wise 
+seeds_df_cl <- mutate(lung_cancer_data, cluster = lungcancer_cut)
+ggplot(seeds_df_cl, aes(x=PM2.5, y = Land_EQI, color = factor(cluster))) + geom_point()
+
+
+```
+# Add the new clustering result to the original dataset 
+```{r}
+Hie_Cluster = data.frame(lungcancer_cut)
+lung_Hie <- cbind(lung_cancer,Hie_Cluster)
+head(lung_Hie)
+
+#Export the new dataset
+write.csv(lung_Hie, "E:/Big Data II/A4 Clustering/lungcancer Hiecluster.csv")
+
+```

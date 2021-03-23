@@ -1,0 +1,94 @@
+---
+title: "hw4-clustering"
+author: "Yuan Tian"
+date: "3/24/2020"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r,warning=FALSE, message=FALSE}
+library(data.table)
+library(tidyverse)
+library(FNN)
+library(ggplot2)
+library(factoextra)
+library(cluster)
+```
+
+# Kmeans Clustering
+
+prepare data
+```{r,warning=FALSE, message=FALSE}
+lungcancer <- read.csv(file = 'Air Quality_Lung Cancer Data.csv')
+lung = lungcancer[,c(1,4,5,7,8,9,15,16,17,18,19,20,21,22,23)]
+# nomalize data
+row.names(lung) <- lung[,1]
+lung <-lung[,-1]
+
+lung.norm <- sapply(lung, scale)
+lung.norm = as.data.frame(lung.norm)
+```
+
+clustering
+```{r,warning=FALSE, message=FALSE}
+
+ratio_ss <- rep(0,7)
+
+for (k in 1:7) {
+  lung_km <- kmeans(lung.norm$Lung.Cancer, k, nstart = 20)
+  ratio_ss[k] <- lung_km$tot.withinss
+  
+}
+plot(ratio_ss, type = 'b', xlab = 'k')
+
+# dendrogram
+hc <- hclust(dist(lung.norm), "ward.D")
+plot(hc) 
+rect.hclust(hc, k = 4, border="red") 
+grid()
+memb <- cutree(hc, k = 4)
+
+# from plot, we choose k=4
+lungkm <- kmeans(lung.norm, 4)
+lungkm$centers
+lungkm$size
+dist(lungkm$centers)
+
+# line plots
+plot(c(0), xaxt = 'n', ylab = "", type = "l", 
+     ylim = c(min(lungkm$centers), max(lungkm$centers)), xlim = c(0, 13))
+axis(1, at = c(1:13), labels = names(lung[-1]))
+for (i in c(1:4))
+  lines(lungkm$centers[i,], lty = i, lwd = 2, col = switch(i,  "red", "black",
+                                                       "green", "purple"))
+text(x = 0.5, y = lungkm$centers[, 1], labels = paste("Cluster", c(1:4)))
+grid()
+
+#cluster
+fviz_cluster(lungkm, data = lung.norm)
+
+#heatmap
+heatmap(as.matrix(lung.norm)[order(lungkm$cluster),], Colv = NA, hclustfun = hclust)
+
+# scatter plot
+clusplot(lung.norm, lungkm$cluster, color=TRUE, shade=TRUE, labels=2, lines=0)
+
+with(lung.norm, pairs(lung.norm[,c(1:4)], col=c(1:4)[lungkm$cluster])) 
+
+lung.norm %>%
+  as_tibble() %>%
+  mutate(cluster = lungkm$cluster) %>%
+  ggplot(aes(Lung.Cancer,PM2.5, color = factor(cluster))) +
+  geom_point()
+```
+
+
+Copy the cluster data back to your original data as a new predictor: KMeansCluster
+```{r,warning=FALSE, message=FALSE}
+KMeansCluster = as.factor(lungkm$cluster)
+lungkmeans <- cbind(lungcancer,KMeansCluster)
+head(lungkmeans)
+write.csv(lungkmeans, "lungcancerkmeans", sep="\t", row.names=FALSE, col.names=FALSE)
+```
+

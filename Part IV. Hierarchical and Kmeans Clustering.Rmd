@@ -53,7 +53,7 @@ plot(lungcancer_hc6, hang = -1, ann = FALSE)
 
 ```
 
-## Determining Optimal Clusters
+### Determining Optimal Clusters
 ```{r cars}
 # Perform Average Silhouette Method
 fviz_nbclust(lung_cancer_sc, FUN = hcut, method = "silhouette")
@@ -84,7 +84,7 @@ fviz_nbclust(lung_cancer_sc, FUN = hcut, method = "wss")
 gap_stat<- clusGap(lung_cancer_sc,FUN= hcut, K.max = 20, B = 50)
 fviz_gap_stat(gap_stat)
 ```
-#Visualization
+### Visualization
 ```{r}
 #dendrogram
 hcd <- as.dendrogram(lungcancer_hc6)
@@ -111,7 +111,7 @@ ggplot(seeds_df_cl, aes(x=PM2.5, y = Land_EQI, color = factor(cluster))) + geom_
 
 
 ```
-## Add the new clustering result to the original dataset 
+### Add the new clustering result to the original dataset 
 ```{r}
 Hie_Cluster = data.frame(lungcancer_cut)
 lung_Hie <- cbind(lung_cancer,Hie_Cluster)
@@ -135,7 +135,7 @@ lung.norm <- sapply(lung, scale)
 lung.norm = as.data.frame(lung.norm)
 ```
 
-clustering
+### clustering
 ```{r,warning=FALSE, message=FALSE}
 ratio_ss <- rep(0,7)
 for (k in 1:7) {
@@ -178,9 +178,8 @@ lung.norm %>%
   geom_point()
 ```
 
-
-Copy the cluster data back to your original data as a new predictor: KMeansCluster
 ```{r,warning=FALSE, message=FALSE}
+#Copy the cluster data back to your original data as a new predictor: KMeansCluster
 KMeansCluster = as.factor(lungkm$cluster)
 lungkmeans <- cbind(lungcancer,KMeansCluster)
 head(lungkmeans)

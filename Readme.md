@@ -19,9 +19,9 @@ Lung Cancer Mortality Rate & Environmental Quality Index
 5. Interpretation of Multi Regression Model
 
 ##  Part V. Classifications Model with Categorical Target Variable
-1. Logistic Regression
-2. KNN Classification
-3. Decision Trees Classification
+1. KNN Classification 
+2. Decision Trees Classification
+3. Logistic Regression
 4. Interpretation of Classification methods
 
 ##  Part VI. Data Robot Modeling
